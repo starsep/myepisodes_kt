@@ -5,17 +5,29 @@ plugins {
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
-val mainPackage = "com.starsep.myepisodes"
+val mainPackage = "com.starsep.myepisodes_kt"
 val mainClass = "$mainPackage.MainKt"
 group = mainPackage
 version = "0.0.1"
 
 repositories {
     mavenCentral()
+    jcenter()
+    maven(url = "https://jitpack.io")
 }
+
+val koinVersion = "2.1.5"
+val konfVersion = "0.22.1"
+val ktorVersion = "1.3.1"
+val jsoupVersion = "1.13.1"
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-apache:$ktorVersion")
+    implementation("org.koin:koin-core:$koinVersion")
+    implementation("org.jsoup:jsoup:$jsoupVersion")
+    implementation("com.uchuhimo:konf:$konfVersion")
 }
 
 tasks {
