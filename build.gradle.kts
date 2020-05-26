@@ -2,6 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     kotlin("jvm") version "1.3.72"
+    kotlin("plugin.serialization") version "1.3.72"
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
@@ -28,6 +29,8 @@ dependencies {
     implementation("org.koin:koin-core:$koinVersion")
     implementation("org.jsoup:jsoup:$jsoupVersion")
     implementation("com.uchuhimo:konf:$konfVersion")
+    implementation("me.tongfei:progressbar:0.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
 }
 
 tasks {

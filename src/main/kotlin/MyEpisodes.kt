@@ -1,13 +1,19 @@
 package com.starsep.myepisodes_kt
 
 import com.starsep.myepisodes_kt.config.CredentialsSpec
+import com.starsep.myepisodes_kt.model.Episode
 import com.starsep.myepisodes_kt.model.Show
 import com.uchuhimo.konf.Config
 import io.ktor.client.HttpClient
+import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import io.ktor.content.TextContent
+import io.ktor.http.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.koin.core.KoinComponent
@@ -31,7 +37,7 @@ class MyEpisodes : KoinComponent {
         assert(username in response)
     }
 
-    suspend fun listOfShows(): List<Show> = call("life_wasted.php")
+    suspend fun listOfShows(): List<Show> = httpClient.get<String>("life_wasted.php").toDocument()
         .select("a")
         .filter {
             it.attr("href").startsWith("/epsbyshow/")
@@ -40,8 +46,28 @@ class MyEpisodes : KoinComponent {
             Show(it.attr("href"), it.text())
         }
 
-    private suspend fun call(url: String): Document {
-        val data = httpClient.get<String>(url)
-        return Jsoup.parse(data)
+    suspend fun showData(show: Show): List<Episode> {
+        val document = httpClient.post<String>("/ajax/service.php") {
+            parameter("mode", "view_epsbyshow")
+            body = FormDataContent(Parameters.build {
+                append("showid", show.id)
+            })
+        }.toDocument()
+        return document.select("tr")
+            .filter { "odd" in it.classNames() || "even" in it.classNames() }
+            .map {
+                val statuses = it.select("td.status")
+                Episode(
+                    date = it.selectFirst("td.date").child(0).text(),
+                    showName = show.name,
+                    showId = show.id,
+                    number = it.selectFirst("td.longnumber").text(),
+                    name = it.selectFirst("td.epname").text(),
+                    acquired = statuses[0].child(0).hasAttr("checked"),
+                    watched = statuses[1].child(0).hasAttr("checked")
+                )
+        }
     }
+
+    private fun String.toDocument(): Document = Jsoup.parse(this)
 }

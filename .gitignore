@@ -30,5 +30,6 @@ hs_err_pid*
 # End of https://www.gitignore.io/api/kotlin
 build
 .gradle
-credentials.json
+config.json
 local.properties
+output
