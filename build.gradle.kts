@@ -30,6 +30,8 @@ dependencies {
     implementation("org.jsoup:jsoup:$jsoupVersion")
     implementation("com.uchuhimo:konf:$konfVersion")
     implementation("me.tongfei:progressbar:0.8.1")
+    implementation("io.ktor:ktor-client-json-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-client-serialization-jvm:$ktorVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:1.0-M1-1.4.0-rc-218")
 }
 

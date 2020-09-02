@@ -20,9 +20,15 @@ class Runner : KoinComponent {
     private val config: Config by inject()
     private val json: Json by inject()
     private val myEpisodes = MyEpisodes()
+    private val traktTV = TraktTV()
     private val outputDirectory = File(config[OutputSpec.directory])
 
     suspend fun run() {
+//        runMyEpisodes()
+        runTraktTV()
+    }
+
+    private suspend fun runMyEpisodes() {
         myEpisodes.login()
         val shows = myEpisodes.listOfShows()
         outputDirectory.mkdirs()
@@ -36,6 +42,10 @@ class Runner : KoinComponent {
                 json.encodeToString(ListSerializer(Episode.serializer()), showData)
             )
         }
+    }
+
+    private suspend fun runTraktTV() {
+        traktTV.run()
     }
 }
 

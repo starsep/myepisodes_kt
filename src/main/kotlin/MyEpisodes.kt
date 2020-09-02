@@ -5,6 +5,7 @@ import com.starsep.myepisodes_kt.model.Episode
 import com.starsep.myepisodes_kt.model.Show
 import com.uchuhimo.konf.Config
 import io.ktor.client.HttpClient
+import io.ktor.client.features.defaultRequest
 import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
@@ -15,10 +16,18 @@ import io.ktor.http.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.koin.core.KoinComponent
+import org.koin.core.get
 import org.koin.core.inject
 
 class MyEpisodes : KoinComponent {
-    private val httpClient: HttpClient by inject()
+    private val httpClient = get<HttpClient>().config {
+        defaultRequest {
+            url {
+                host = "www.myepisodes.com"
+                protocol = URLProtocol.HTTPS
+            }
+        }
+    }
     private val config: Config by inject()
 
     suspend fun login() {
