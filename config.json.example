@@ -1,9 +1,0 @@
-{
-  "credentials": {
-    "username": "MYEPISODES_USERNAME",
-    "password": "MYEPISODES_PASSWORD"
-  },
-  "output": {
-    directory: "output"
-  }
-}

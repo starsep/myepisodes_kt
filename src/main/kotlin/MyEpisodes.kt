@@ -1,6 +1,6 @@
 package com.starsep.myepisodes_kt
 
-import com.starsep.myepisodes_kt.config.CredentialsSpec
+import com.starsep.myepisodes_kt.config.MyEpisodesSpec
 import com.starsep.myepisodes_kt.model.Episode
 import com.starsep.myepisodes_kt.model.Show
 import com.uchuhimo.konf.Config
@@ -9,10 +9,8 @@ import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
-import io.ktor.content.TextContent
 import io.ktor.http.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -24,12 +22,12 @@ class MyEpisodes : KoinComponent {
     private val config: Config by inject()
 
     suspend fun login() {
-        val username = config[CredentialsSpec.username]
+        val username = config[MyEpisodesSpec.username]
         val response = httpClient.post<String>("login.php") {
             body = MultiPartFormDataContent(
                 formData {
                     append("username", username)
-                    append("password", config[CredentialsSpec.password])
+                    append("password", config[MyEpisodesSpec.password])
                     append("action", "Login")
                 }
             )

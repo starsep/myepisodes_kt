@@ -7,7 +7,7 @@ import com.starsep.myepisodes_kt.model.Show
 import com.uchuhimo.konf.Config
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.builtins.list
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import me.tongfei.progressbar.ProgressBar
 import org.koin.core.KoinComponent
@@ -27,13 +27,13 @@ class Runner : KoinComponent {
         val shows = myEpisodes.listOfShows()
         outputDirectory.mkdirs()
         File(outputDirectory, "shows.json").writeText(
-            json.stringify(Show.serializer().list, shows)
+            json.encodeToString(ListSerializer(Show.serializer()), shows)
         )
         ProgressBar.wrap(shows, "Downloading show").forEach {
             val showData = myEpisodes.showData(it)
             delay(300) // TODO: configurable
             File(outputDirectory, "${it.id}.json").writeText(
-                json.stringify(Episode.serializer().list, showData)
+                json.encodeToString(ListSerializer(Episode.serializer()), showData)
             )
         }
     }

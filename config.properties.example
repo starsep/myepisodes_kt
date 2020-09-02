@@ -1,0 +1,4 @@
+myepisodes.username = MYEPISODES_USERNAME
+myepisodes.password = MYEPISODES_PASSWORD
+
+output.directory = output
