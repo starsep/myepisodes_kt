@@ -24,7 +24,7 @@ class Runner : KoinComponent {
     private val outputDirectory = File(config[OutputSpec.directory])
 
     suspend fun run() {
-//        runMyEpisodes()
+        runMyEpisodes()
         runTraktTV()
     }
 
