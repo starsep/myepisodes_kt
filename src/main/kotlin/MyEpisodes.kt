@@ -15,9 +15,9 @@ import io.ktor.client.request.post
 import io.ktor.http.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.koin.core.KoinComponent
-import org.koin.core.get
-import org.koin.core.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
+import org.koin.core.component.inject
 
 class MyEpisodes : KoinComponent {
     private val httpClient = get<HttpClient>().config {
@@ -46,9 +46,7 @@ class MyEpisodes : KoinComponent {
 
     suspend fun listOfShows(): List<Show> = httpClient.get<String>("life_wasted.php").toDocument()
         .select("a")
-        .filter {
-            it.attr("href").startsWith("/epsbyshow/")
-        }
+        .filter { it.attr("href").startsWith("/epsbyshow/") }
         .map {
             Show(it.attr("href"), it.text())
         }
