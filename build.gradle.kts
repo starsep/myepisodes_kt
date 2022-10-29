@@ -17,11 +17,6 @@ repositories {
     maven(url = "https://jitpack.io")
 }
 
-val koinVersion = "2.1.5"
-val konfVersion = "0.22.1"
-val ktorVersion = "1.4.0"
-val jsoupVersion = "1.13.1"
-
 dependencies {
     implementation(Ktor.client.core)
     implementation(Ktor.client.apache)
@@ -31,7 +26,7 @@ dependencies {
     implementation("me.tongfei:progressbar:_")
     implementation("io.ktor:ktor-client-json-jvm:_")
     implementation("io.ktor:ktor-client-serialization-jvm:_")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:_")
+    implementation(KotlinX.serialization.json)
 }
 
 tasks {
