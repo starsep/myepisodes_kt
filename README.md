@@ -9,5 +9,5 @@ To build and execute program:
 
 To check dependencies versions:
 ```
-./gradlew dependencyUpdates
+./gradlew refreshVersions
 ```

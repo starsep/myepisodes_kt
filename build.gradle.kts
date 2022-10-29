@@ -1,10 +1,9 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-    kotlin("jvm") version "1.4.0"
-    kotlin("plugin.serialization") version "1.4.0"
-    id("com.github.johnrengelman.shadow") version "6.0.0"
-    id("com.github.ben-manes.versions") version "0.29.0"
+    kotlin("jvm")
+    kotlin("plugin.serialization")
+    id("com.github.johnrengelman.shadow")
 }
 
 val mainPackage = "com.starsep.myepisodes_kt"
@@ -24,15 +23,15 @@ val ktorVersion = "1.4.0"
 val jsoupVersion = "1.13.1"
 
 dependencies {
-    implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-apache:$ktorVersion")
-    implementation("org.koin:koin-core:$koinVersion")
-    implementation("org.jsoup:jsoup:$jsoupVersion")
-    implementation("com.uchuhimo:konf:$konfVersion")
-    implementation("me.tongfei:progressbar:0.8.1")
-    implementation("io.ktor:ktor-client-json-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-client-serialization-jvm:$ktorVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:1.0-M1-1.4.0-rc-218")
+    implementation(Ktor.client.core)
+    implementation(Ktor.client.apache)
+    implementation("org.koin:koin-core:_")
+    implementation("org.jsoup:jsoup:_")
+    implementation("com.uchuhimo:konf:_")
+    implementation("me.tongfei:progressbar:_")
+    implementation("io.ktor:ktor-client-json-jvm:_")
+    implementation("io.ktor:ktor-client-serialization-jvm:_")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:_")
 }
 
 tasks {
