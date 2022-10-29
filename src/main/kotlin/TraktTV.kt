@@ -7,13 +7,12 @@ import com.starsep.myepisodes_kt.network.TokenResponse
 import com.uchuhimo.konf.Config
 import com.uchuhimo.konf.source.properties.toProperties
 import io.ktor.client.HttpClient
-import io.ktor.client.features.defaultRequest
-import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.features.json.serializer.KotlinxSerializer
+import io.ktor.client.call.*
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.HttpResponse
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.http.*
-import io.ktor.util.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.component.inject
@@ -27,14 +26,14 @@ class TraktTV : KoinComponent {
                 protocol = URLProtocol.HTTPS
             }
         }
-        install(JsonFeature) {
-            serializer = KotlinxSerializer()
+        install(ContentNegotiation) {
+            json()
         }
     }
     private val config: Config by inject()
 
     private suspend fun authorize() {
-        val response = httpClient.get<HttpResponse>("/oauth/authorize") {
+        val response = httpClient.get("/oauth/authorize") {
             parameter("response_type", "code")
             parameter("client_id", config[TraktTVSpec.clientID])
             parameter("redirect_uri", "urn:ietf:wg:oauth:2.0:oob")
@@ -63,15 +62,15 @@ class TraktTV : KoinComponent {
         if (code == null) {
             authorize(); return ""
         }
-        val response = httpClient.post<TokenResponse>("/oauth/token") {
-            body = TokenRequest(
+        val response: TokenResponse = httpClient.post("/oauth/token") {
+            setBody(TokenRequest(
                 code = code,
                 clientID = config[TraktTVSpec.clientID],
                 clientSecret = config[TraktTVSpec.clientSecret],
-            )
+            ))
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
-        }
+        }.body()
         config[TraktTVSpec.tokenExpiresAt] = response.createdAt + response.expiresIn
         config[TraktTVSpec.accessToken] = response.accessToken
         config[TraktTVSpec.refreshToken] = response.refreshToken

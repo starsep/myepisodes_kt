@@ -7,10 +7,8 @@ import com.starsep.myepisodes_kt.config.TraktTVSpec
 import com.uchuhimo.konf.Config
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
-import io.ktor.client.features.cookies.AcceptAllCookiesStorage
-import io.ktor.client.features.cookies.HttpCookies
-import io.ktor.client.features.defaultRequest
-import io.ktor.http.URLProtocol
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.cookies.*
 import io.ktor.http.userAgent
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
@@ -26,7 +24,6 @@ val appModule = module {
                 followRedirects = true
             }
             defaultRequest {
-                followRedirects = true
                 userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36")
             }
         }

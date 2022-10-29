@@ -13,19 +13,18 @@ version = "0.0.1"
 
 repositories {
     mavenCentral()
-    jcenter()
     maven(url = "https://jitpack.io")
 }
 
 dependencies {
     implementation(Ktor.client.core)
     implementation(Ktor.client.apache)
-    implementation("org.koin:koin-core:_")
+    implementation(Ktor.client.contentNegotiation)
+    implementation(Ktor.plugins.serialization.kotlinx.json)
+    implementation(Koin.core)
     implementation("org.jsoup:jsoup:_")
     implementation("com.uchuhimo:konf:_")
     implementation("me.tongfei:progressbar:_")
-    implementation("io.ktor:ktor-client-json-jvm:_")
-    implementation("io.ktor:ktor-client-serialization-jvm:_")
     implementation(KotlinX.serialization.json)
 }
 

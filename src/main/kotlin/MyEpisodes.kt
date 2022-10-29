@@ -5,13 +5,12 @@ import com.starsep.myepisodes_kt.model.Episode
 import com.starsep.myepisodes_kt.model.Show
 import com.uchuhimo.konf.Config
 import io.ktor.client.HttpClient
-import io.ktor.client.features.defaultRequest
+import io.ktor.client.plugins.*
+import io.ktor.client.request.*
 import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
-import io.ktor.client.request.get
-import io.ktor.client.request.parameter
-import io.ktor.client.request.post
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -32,19 +31,19 @@ class MyEpisodes : KoinComponent {
 
     suspend fun login() {
         val username = config[MyEpisodesSpec.username]
-        val response = httpClient.post<String>("login.php") {
-            body = MultiPartFormDataContent(
+        val response = httpClient.post("login.php") {
+            setBody(MultiPartFormDataContent(
                 formData {
                     append("username", username)
                     append("password", config[MyEpisodesSpec.password])
                     append("action", "Login")
                 }
-            )
-        }
+            ))
+        }.bodyAsText()
         assert(username in response)
     }
 
-    suspend fun listOfShows(): List<Show> = httpClient.get<String>("life_wasted.php").toDocument()
+    suspend fun listOfShows(): List<Show> = httpClient.get("life_wasted.php").bodyAsText().toDocument()
         .select("a")
         .filter { it.attr("href").startsWith("/epsbyshow/") }
         .map {
@@ -52,12 +51,12 @@ class MyEpisodes : KoinComponent {
         }
 
     suspend fun showData(show: Show): List<Episode> {
-        val document = httpClient.post<String>("/ajax/service.php") {
+        val document = httpClient.post("/ajax/service.php") {
             parameter("mode", "view_epsbyshow")
-            body = FormDataContent(Parameters.build {
+            setBody(FormDataContent(Parameters.build {
                 append("showid", show.id)
-            })
-        }.toDocument()
+            }))
+        }.bodyAsText().toDocument()
         return document.select("tr")
             .filter { "odd" in it.classNames() || "even" in it.classNames() }
             .map {
