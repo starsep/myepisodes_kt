@@ -29,12 +29,12 @@ dependencies {
 }
 
 tasks {
-    compileKotlin {
+    /*compileKotlin {
         kotlinOptions.jvmTarget = "1.8"
     }
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
-    }
+    }*/
     named<ShadowJar>("shadowJar") {
         archiveBaseName.set("myepisodes_kt")
         mergeServiceFiles()
