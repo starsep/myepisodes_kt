@@ -62,11 +62,11 @@ class MyEpisodes : KoinComponent {
             .map {
                 val statuses = it.select("td.status")
                 Episode(
-                    date = it.selectFirst("td.date").child(0).text(),
+                    date = it.selectFirst("td.date")!!.child(0).text(),
                     showName = show.name,
                     showId = show.id,
-                    number = it.selectFirst("td.longnumber").text(),
-                    name = it.selectFirst("td.epname").text(),
+                    number = it.selectFirst("td.longnumber")!!.text(),
+                    name = it.selectFirst("td.epname")!!.text(),
                     acquired = statuses[0].child(0).hasAttr("checked"),
                     watched = statuses[1].child(0).hasAttr("checked")
                 )
