@@ -48,7 +48,7 @@ tasks {
 }
 
 task("run", JavaExec::class) {
-    main = mainClassName
+    mainClass.set(mainClassName)
     classpath = sourceSets["main"].runtimeClasspath
     standardInput = System.`in`
 }
