@@ -129,18 +129,19 @@ class TraktTV : KoinComponent {
                 return@forEach
             }
             val episodes = showsData[showId]!!
-            ProgressBar.wrap(episodes, "Scrobbling episodes").forEach episodesForEach@{ episode ->
+            for (episode in episodes) {
+                if (!episode.watched) continue
                 val (seasonNumberString, episodeNumberString) = episode.number.split("x")
                 val season = seasonNumberString.toIntOrNull()
                 val episodeNumber = episodeNumberString.toIntOrNull()
                 if (season == null || episodeNumber == null) {
                     println("Invalid MyEpisodes episode number: ${episode.number}")
-                    return@episodesForEach
+                    continue
                 }
                 val episodeResponse = authorizedHttpClient.get("/shows/$traktId/seasons/$season/episodes/$episodeNumber")
                 if (episodeResponse.status != HttpStatusCode.OK) {
                     println("Error episode response: $episodeResponse")
-                    return@episodesForEach
+                    continue
                 }
                 val traktTVEpisode = episodeResponse.body<TraktTVEpisode>()
                 delay(delayDuration)
