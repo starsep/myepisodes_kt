@@ -2,10 +2,7 @@ package com.starsep.myepisodes_kt
 
 import CONFIG_FILENAME
 import com.starsep.myepisodes_kt.config.TraktTVSpec
-import com.starsep.myepisodes_kt.model.Episode
-import com.starsep.myepisodes_kt.model.MyEpisodesTraktMatching
-import com.starsep.myepisodes_kt.model.Show
-import com.starsep.myepisodes_kt.model.TraktTVShowSearchResult
+import com.starsep.myepisodes_kt.model.*
 import com.starsep.myepisodes_kt.network.TokenRequest
 import com.starsep.myepisodes_kt.network.TokenResponse
 import com.uchuhimo.konf.Config
@@ -17,9 +14,15 @@ import io.ktor.client.request.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.http.*
+import kotlinx.coroutines.delay
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import me.tongfei.progressbar.ProgressBar
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.component.inject
+import java.io.File
 import kotlin.system.exitProcess
 
 class TraktTV : KoinComponent {
@@ -35,6 +38,7 @@ class TraktTV : KoinComponent {
         }
     }
     private val config: Config by inject()
+    private val json: Json by inject()
 
     private suspend fun authorize() {
         val response = httpClient.get("/oauth/authorize") {
@@ -49,7 +53,7 @@ class TraktTV : KoinComponent {
         exitProcess(0)
     }
 
-    suspend fun run(shows: List<Show>, showsData: Map<String, List<Episode>>, existingMatching: MyEpisodesTraktMatching): MyEpisodesTraktMatching {
+    suspend fun run(shows: List<Show>, showsData: Map<String, List<Episode>>, matchingFile: File) {
         val accessToken = config[TraktTVSpec.accessToken] ?: requestToken()
         val authorizedHttpClient = httpClient.config {
             defaultRequest {
@@ -59,9 +63,20 @@ class TraktTV : KoinComponent {
                 header("trakt-api-key", config[TraktTVSpec.clientID])
             }
         }
+        val existingMatching = if (matchingFile.exists()) {
+            json.decodeFromString<MyEpisodesTraktMatching>(matchingFile.readText())
+        } else {
+            emptyMap()
+        }
+        val newMatching = matchShowsWithMyEpisodes(authorizedHttpClient, shows, showsData, existingMatching)
+        matchingFile.writeText(json.encodeToString(newMatching))
+        syncEpisodes(authorizedHttpClient, showsData, newMatching)
+    }
+
+    private suspend fun matchShowsWithMyEpisodes(authorizedHttpClient: HttpClient, shows: List<Show>, showsData: Map<String, List<Episode>>, existingMatching: MyEpisodesTraktMatching): MyEpisodesTraktMatching {
         val results = existingMatching.toMutableMap()
-        for (show in shows) {
-            if (show.url in results) continue
+        ProgressBar.wrap(shows, "Matching shows").forEach { show ->
+            if (show.url in results) return@forEach
             val nameWithoutParentheses = show.name.replace(Regex("\\(.*\\)"), "").trim()
             val response = authorizedHttpClient.get("/search/show") {
                 parameter("query", nameWithoutParentheses)
@@ -84,6 +99,43 @@ class TraktTV : KoinComponent {
             }
         }
         return results
+    }
+
+    private suspend fun syncEpisodes(authorizedHttpClient: HttpClient, showsData: Map<String, List<Episode>>, matching: MyEpisodesTraktMatching) {
+        val delayDuration = config[TraktTVSpec.delay]
+        val matchingById = matching.map { it.key.split("/")[2] to it.value }.toMap()
+        ProgressBar.wrap(showsData.keys, "Scrobbling shows").forEach { showId ->
+           val traktId = matchingById[showId]
+           if (traktId == null) {
+                println("No TrackTV matching for $showId")
+                return@forEach
+            }
+           val episodes = showsData[showId]!!
+            ProgressBar.wrap(episodes, "Scrobbling episodes").forEach episodesForEach@ { episode ->
+               val (seasonNumberString, episodeNumberString) = episode.number.split("x")
+               val season = seasonNumberString.toIntOrNull()
+               val episodeNumber = episodeNumberString.toIntOrNull()
+               if (season == null || episodeNumber == null) {
+                   println("Invalid MyEpisodes episode number: ${episode.number}")
+                   return@episodesForEach
+               }
+               val episodeResponse = authorizedHttpClient.get("/shows/$traktId/seasons/${season}/episodes/${episodeNumber}")
+                if (episodeResponse.status != HttpStatusCode.OK) {
+                    println("Error episode response: $episodeResponse")
+                    return@episodesForEach
+                }
+                val traktTVEpisode = episodeResponse.body<TraktTVEpisode>()
+                delay(delayDuration)
+                val response = authorizedHttpClient.post("/scrobble/stop") {
+                   setBody(TraktTVScrobbleRequest(episode = traktTVEpisode))
+               }
+                if (response.status != HttpStatusCode.Created) {
+                    println("Error scrobble response: $response")
+                }
+               delay(delayDuration)
+           }
+
+       }
     }
 
     private suspend fun requestToken(): String {

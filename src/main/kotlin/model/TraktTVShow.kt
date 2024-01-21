@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class TraktTVShowIds(
     val trakt: Int,
-    val slug: String,
+    val slug: String? = null,
     val tvdb: Int?,
     val imdb: String?,
     val tmdb: Int?,
