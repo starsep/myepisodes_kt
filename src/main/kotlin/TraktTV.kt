@@ -144,7 +144,6 @@ class TraktTV : KoinComponent {
                     continue
                 }
                 val traktTVEpisode = episodeResponse.body<TraktTVEpisode>()
-                delay(delayDuration)
                 val response =
                     authorizedHttpClient.post("/scrobble/stop") {
                         setBody(TraktTVScrobbleRequest(episode = traktTVEpisode))
