@@ -13,30 +13,31 @@ import io.ktor.http.userAgent
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
-val appModule = module {
-    single {
-        HttpClient(Apache) {
-            expectSuccess = false
-            install(HttpCookies) {
-                storage = AcceptAllCookiesStorage()
-            }
-            engine {
-                followRedirects = true
-            }
-            defaultRequest {
-                userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36")
+val appModule =
+    module {
+        single {
+            HttpClient(Apache) {
+                expectSuccess = false
+                install(HttpCookies) {
+                    storage = AcceptAllCookiesStorage()
+                }
+                engine {
+                    followRedirects = true
+                }
+                defaultRequest {
+                    userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36")
+                }
             }
         }
-    }
-    single {
-        Config {
-            addSpec(MyEpisodesSpec)
-            addSpec(OutputSpec)
-            addSpec(TraktTVSpec)
+        single {
+            Config {
+                addSpec(MyEpisodesSpec)
+                addSpec(OutputSpec)
+                addSpec(TraktTVSpec)
+            }
+                .from.properties.file(CONFIG_FILENAME)
         }
-            .from.properties.file(CONFIG_FILENAME)
+        single {
+            Json { prettyPrint = true }
+        }
     }
-    single {
-        Json { prettyPrint = true }
-    }
-}

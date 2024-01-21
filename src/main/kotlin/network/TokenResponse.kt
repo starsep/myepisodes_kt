@@ -15,5 +15,5 @@ data class TokenResponse(
     val refreshToken: String,
     val scope: String,
     @SerialName("created_at")
-    val createdAt: Int
+    val createdAt: Int,
 )

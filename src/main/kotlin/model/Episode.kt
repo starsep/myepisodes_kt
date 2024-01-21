@@ -9,5 +9,5 @@ data class Episode(
     val number: String,
     val name: String,
     val acquired: Boolean,
-    val watched: Boolean
+    val watched: Boolean,
 )

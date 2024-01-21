@@ -19,44 +19,54 @@ import org.koin.core.component.get
 import org.koin.core.component.inject
 
 class MyEpisodes : KoinComponent {
-    private val httpClient = get<HttpClient>().config {
-        defaultRequest {
-            url {
-                host = "www.myepisodes.com"
-                protocol = URLProtocol.HTTPS
+    private val httpClient =
+        get<HttpClient>().config {
+            defaultRequest {
+                url {
+                    host = "www.myepisodes.com"
+                    protocol = URLProtocol.HTTPS
+                }
             }
         }
-    }
     private val config: Config by inject()
 
     suspend fun login() {
         val username = config[MyEpisodesSpec.username]
-        val response = httpClient.post("login.php") {
-            setBody(MultiPartFormDataContent(
-                formData {
-                    append("username", username)
-                    append("password", config[MyEpisodesSpec.password])
-                    append("action", "Login")
-                }
-            ))
-        }.bodyAsText()
+        val response =
+            httpClient.post("login.php") {
+                setBody(
+                    MultiPartFormDataContent(
+                        formData {
+                            append("username", username)
+                            append("password", config[MyEpisodesSpec.password])
+                            append("action", "Login")
+                        },
+                    ),
+                )
+            }.bodyAsText()
         assert(username in response)
     }
 
-    suspend fun listOfShows(): List<Show> = httpClient.get("life_wasted.php").bodyAsText().toDocument()
-        .select("a")
-        .filter { it.attr("href").startsWith("/epsbyshow/") }
-        .map {
-            Show(it.attr("href"), it.text())
-        }
+    suspend fun listOfShows(): List<Show> =
+        httpClient.get("life_wasted.php").bodyAsText().toDocument()
+            .select("a")
+            .filter { it.attr("href").startsWith("/epsbyshow/") }
+            .map {
+                Show(it.attr("href"), it.text())
+            }
 
     suspend fun showData(show: Show): List<Episode> {
-        val document = httpClient.post("/ajax/service.php") {
-            parameter("mode", "view_epsbyshow")
-            setBody(FormDataContent(Parameters.build {
-                append("showid", show.id)
-            }))
-        }.bodyAsText().toDocument()
+        val document =
+            httpClient.post("/ajax/service.php") {
+                parameter("mode", "view_epsbyshow")
+                setBody(
+                    FormDataContent(
+                        Parameters.build {
+                            append("showid", show.id)
+                        },
+                    ),
+                )
+            }.bodyAsText().toDocument()
         return document.select("tr")
             .filter { "odd" in it.classNames() || "even" in it.classNames() }
             .map {
@@ -68,9 +78,9 @@ class MyEpisodes : KoinComponent {
                     number = it.selectFirst("td.longnumber")!!.text(),
                     name = it.selectFirst("td.epname")!!.text(),
                     acquired = statuses[0].child(0).hasAttr("checked"),
-                    watched = statuses[1].child(0).hasAttr("checked")
+                    watched = statuses[1].child(0).hasAttr("checked"),
                 )
-        }
+            }
     }
 
     private fun String.toDocument(): Document = Jsoup.parse(this)

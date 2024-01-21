@@ -4,7 +4,6 @@ import com.starsep.myepisodes_kt.config.MyEpisodesSpec
 import com.starsep.myepisodes_kt.config.OutputSpec
 import com.starsep.myepisodes_kt.di.appModule
 import com.starsep.myepisodes_kt.model.Episode
-import com.starsep.myepisodes_kt.model.MyEpisodesTraktMatching
 import com.starsep.myepisodes_kt.model.Show
 import com.uchuhimo.konf.Config
 import kotlinx.coroutines.delay
@@ -18,7 +17,6 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.context.startKoin
 import java.io.File
-
 
 class Runner : KoinComponent {
     private val config: Config by inject()
@@ -38,7 +36,7 @@ class Runner : KoinComponent {
         val shows = myEpisodes.listOfShows()
         outputDirectory.mkdirs()
         File(outputDirectory, "shows.json").writeText(
-            json.encodeToString(ListSerializer(Show.serializer()), shows)
+            json.encodeToString(ListSerializer(Show.serializer()), shows),
         )
         val showsData = mutableMapOf<String, List<Episode>>()
         ProgressBar.wrap(shows, "Downloading show").forEach {
@@ -50,7 +48,7 @@ class Runner : KoinComponent {
             val showData = myEpisodes.showData(it)
             delay(config[MyEpisodesSpec.delay])
             File(outputDirectory, "${it.id}.json").writeText(
-                json.encodeToString(ListSerializer(Episode.serializer()), showData)
+                json.encodeToString(ListSerializer(Episode.serializer()), showData),
             )
         }
         return shows to showsData

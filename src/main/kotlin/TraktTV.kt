@@ -10,10 +10,10 @@ import com.uchuhimo.konf.source.properties.toProperties
 import io.ktor.client.HttpClient
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
-import io.ktor.client.request.*
 import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.delay
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -26,26 +26,28 @@ import java.io.File
 import kotlin.system.exitProcess
 
 class TraktTV : KoinComponent {
-    private val httpClient = get<HttpClient>().config {
-        defaultRequest {
-            url {
-                host = "api.trakt.tv"
-                protocol = URLProtocol.HTTPS
+    private val httpClient =
+        get<HttpClient>().config {
+            defaultRequest {
+                url {
+                    host = "api.trakt.tv"
+                    protocol = URLProtocol.HTTPS
+                }
+            }
+            install(ContentNegotiation) {
+                json()
             }
         }
-        install(ContentNegotiation) {
-            json()
-        }
-    }
     private val config: Config by inject()
     private val json: Json by inject()
 
     private suspend fun authorize() {
-        val response = httpClient.get("/oauth/authorize") {
-            parameter("response_type", "code")
-            parameter("client_id", config[TraktTVSpec.clientID])
-            parameter("redirect_uri", "urn:ietf:wg:oauth:2.0:oob")
-        }
+        val response =
+            httpClient.get("/oauth/authorize") {
+                parameter("response_type", "code")
+                parameter("client_id", config[TraktTVSpec.clientID])
+                parameter("redirect_uri", "urn:ietf:wg:oauth:2.0:oob")
+            }
         println("Visit this url in a browser")
         println(response.call.request.url)
         println("Input code in config")
@@ -53,35 +55,47 @@ class TraktTV : KoinComponent {
         exitProcess(0)
     }
 
-    suspend fun run(shows: List<Show>, showsData: Map<String, List<Episode>>, matchingFile: File) {
+    suspend fun run(
+        shows: List<Show>,
+        showsData: Map<String, List<Episode>>,
+        matchingFile: File,
+    ) {
         val accessToken = config[TraktTVSpec.accessToken] ?: requestToken()
-        val authorizedHttpClient = httpClient.config {
-            defaultRequest {
-                contentType(ContentType.Application.Json)
-                header(HttpHeaders.Authorization, "Bearer $accessToken")
-                header("trakt-api-version", "2")
-                header("trakt-api-key", config[TraktTVSpec.clientID])
+        val authorizedHttpClient =
+            httpClient.config {
+                defaultRequest {
+                    contentType(ContentType.Application.Json)
+                    header(HttpHeaders.Authorization, "Bearer $accessToken")
+                    header("trakt-api-version", "2")
+                    header("trakt-api-key", config[TraktTVSpec.clientID])
+                }
             }
-        }
-        val existingMatching = if (matchingFile.exists()) {
-            json.decodeFromString<MyEpisodesTraktMatching>(matchingFile.readText())
-        } else {
-            emptyMap()
-        }
+        val existingMatching =
+            if (matchingFile.exists()) {
+                json.decodeFromString<MyEpisodesTraktMatching>(matchingFile.readText())
+            } else {
+                emptyMap()
+            }
         val newMatching = matchShowsWithMyEpisodes(authorizedHttpClient, shows, showsData, existingMatching)
         matchingFile.writeText(json.encodeToString(newMatching))
         syncEpisodes(authorizedHttpClient, showsData, newMatching)
     }
 
-    private suspend fun matchShowsWithMyEpisodes(authorizedHttpClient: HttpClient, shows: List<Show>, showsData: Map<String, List<Episode>>, existingMatching: MyEpisodesTraktMatching): MyEpisodesTraktMatching {
+    private suspend fun matchShowsWithMyEpisodes(
+        authorizedHttpClient: HttpClient,
+        shows: List<Show>,
+        showsData: Map<String, List<Episode>>,
+        existingMatching: MyEpisodesTraktMatching,
+    ): MyEpisodesTraktMatching {
         val results = existingMatching.toMutableMap()
         ProgressBar.wrap(shows, "Matching shows").forEach { show ->
             if (show.url in results) return@forEach
             val nameWithoutParentheses = show.name.replace(Regex("\\(.*\\)"), "").trim()
-            val response = authorizedHttpClient.get("/search/show") {
-                parameter("query", nameWithoutParentheses)
-                parameter("fields", "title")
-            }.body<List<TraktTVShowSearchResult>>()
+            val response =
+                authorizedHttpClient.get("/search/show") {
+                    parameter("query", nameWithoutParentheses)
+                    parameter("fields", "title")
+                }.body<List<TraktTVShowSearchResult>>()
             when (response.size) {
                 0 -> println("No results for $nameWithoutParentheses: ${show.url}")
                 1 -> {
@@ -101,57 +115,65 @@ class TraktTV : KoinComponent {
         return results
     }
 
-    private suspend fun syncEpisodes(authorizedHttpClient: HttpClient, showsData: Map<String, List<Episode>>, matching: MyEpisodesTraktMatching) {
+    private suspend fun syncEpisodes(
+        authorizedHttpClient: HttpClient,
+        showsData: Map<String, List<Episode>>,
+        matching: MyEpisodesTraktMatching,
+    ) {
         val delayDuration = config[TraktTVSpec.delay]
         val matchingById = matching.map { it.key.split("/")[2] to it.value }.toMap()
         ProgressBar.wrap(showsData.keys, "Scrobbling shows").forEach { showId ->
-           val traktId = matchingById[showId]
-           if (traktId == null) {
+            val traktId = matchingById[showId]
+            if (traktId == null) {
                 println("No TrackTV matching for $showId")
                 return@forEach
             }
-           val episodes = showsData[showId]!!
-            ProgressBar.wrap(episodes, "Scrobbling episodes").forEach episodesForEach@ { episode ->
-               val (seasonNumberString, episodeNumberString) = episode.number.split("x")
-               val season = seasonNumberString.toIntOrNull()
-               val episodeNumber = episodeNumberString.toIntOrNull()
-               if (season == null || episodeNumber == null) {
-                   println("Invalid MyEpisodes episode number: ${episode.number}")
-                   return@episodesForEach
-               }
-               val episodeResponse = authorizedHttpClient.get("/shows/$traktId/seasons/${season}/episodes/${episodeNumber}")
+            val episodes = showsData[showId]!!
+            ProgressBar.wrap(episodes, "Scrobbling episodes").forEach episodesForEach@{ episode ->
+                val (seasonNumberString, episodeNumberString) = episode.number.split("x")
+                val season = seasonNumberString.toIntOrNull()
+                val episodeNumber = episodeNumberString.toIntOrNull()
+                if (season == null || episodeNumber == null) {
+                    println("Invalid MyEpisodes episode number: ${episode.number}")
+                    return@episodesForEach
+                }
+                val episodeResponse = authorizedHttpClient.get("/shows/$traktId/seasons/$season/episodes/$episodeNumber")
                 if (episodeResponse.status != HttpStatusCode.OK) {
                     println("Error episode response: $episodeResponse")
                     return@episodesForEach
                 }
                 val traktTVEpisode = episodeResponse.body<TraktTVEpisode>()
                 delay(delayDuration)
-                val response = authorizedHttpClient.post("/scrobble/stop") {
-                   setBody(TraktTVScrobbleRequest(episode = traktTVEpisode))
-               }
+                val response =
+                    authorizedHttpClient.post("/scrobble/stop") {
+                        setBody(TraktTVScrobbleRequest(episode = traktTVEpisode))
+                    }
                 if (response.status != HttpStatusCode.Created) {
                     println("Error scrobble response: $response")
                 }
-               delay(delayDuration)
-           }
-
-       }
+                delay(delayDuration)
+            }
+        }
     }
 
     private suspend fun requestToken(): String {
         val code: String? = config[TraktTVSpec.code]
         if (code == null) {
-            authorize(); return ""
+            authorize()
+            return ""
         }
-        val response: TokenResponse = httpClient.post("/oauth/token") {
-            setBody(TokenRequest(
-                code = code,
-                clientID = config[TraktTVSpec.clientID],
-                clientSecret = config[TraktTVSpec.clientSecret],
-            ))
-            contentType(ContentType.Application.Json)
-            accept(ContentType.Application.Json)
-        }.body()
+        val response: TokenResponse =
+            httpClient.post("/oauth/token") {
+                setBody(
+                    TokenRequest(
+                        code = code,
+                        clientID = config[TraktTVSpec.clientID],
+                        clientSecret = config[TraktTVSpec.clientSecret],
+                    ),
+                )
+                contentType(ContentType.Application.Json)
+                accept(ContentType.Application.Json)
+            }.body()
         config[TraktTVSpec.tokenExpiresAt] = response.createdAt + response.expiresIn
         config[TraktTVSpec.accessToken] = response.accessToken
         config[TraktTVSpec.refreshToken] = response.refreshToken
