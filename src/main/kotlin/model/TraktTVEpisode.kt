@@ -1,4 +1,4 @@
-package com.starsep.myepisodes_kt.model
+package com.starsep.myepisodeskt.model
 
 import kotlinx.serialization.Serializable
 

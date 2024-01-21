@@ -1,10 +1,10 @@
-package com.starsep.myepisodes_kt
+package com.starsep.myepisodeskt
 
 import CONFIG_FILENAME
-import com.starsep.myepisodes_kt.config.TraktTVSpec
-import com.starsep.myepisodes_kt.model.*
-import com.starsep.myepisodes_kt.network.TokenRequest
-import com.starsep.myepisodes_kt.network.TokenResponse
+import com.starsep.myepisodeskt.config.TraktTVSpec
+import com.starsep.myepisodeskt.model.*
+import com.starsep.myepisodeskt.network.TokenRequest
+import com.starsep.myepisodeskt.network.TokenResponse
 import com.uchuhimo.konf.Config
 import com.uchuhimo.konf.source.properties.toProperties
 import io.ktor.client.HttpClient

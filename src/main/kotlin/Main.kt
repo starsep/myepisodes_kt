@@ -1,10 +1,10 @@
-package com.starsep.myepisodes_kt
+package com.starsep.myepisodeskt
 
-import com.starsep.myepisodes_kt.config.MyEpisodesSpec
-import com.starsep.myepisodes_kt.config.OutputSpec
-import com.starsep.myepisodes_kt.di.appModule
-import com.starsep.myepisodes_kt.model.Episode
-import com.starsep.myepisodes_kt.model.Show
+import com.starsep.myepisodeskt.config.MyEpisodesSpec
+import com.starsep.myepisodeskt.config.OutputSpec
+import com.starsep.myepisodeskt.di.appModule
+import com.starsep.myepisodeskt.model.Episode
+import com.starsep.myepisodeskt.model.Show
 import com.uchuhimo.konf.Config
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking

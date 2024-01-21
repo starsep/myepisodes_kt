@@ -1,4 +1,4 @@
-package com.starsep.myepisodes_kt.config
+package com.starsep.myepisodeskt.config
 
 import com.uchuhimo.konf.ConfigSpec
 

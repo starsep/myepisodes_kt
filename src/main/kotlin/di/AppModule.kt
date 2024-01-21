@@ -1,9 +1,9 @@
-package com.starsep.myepisodes_kt.di
+package com.starsep.myepisodeskt.di
 
 import CONFIG_FILENAME
-import com.starsep.myepisodes_kt.config.MyEpisodesSpec
-import com.starsep.myepisodes_kt.config.OutputSpec
-import com.starsep.myepisodes_kt.config.TraktTVSpec
+import com.starsep.myepisodeskt.config.MyEpisodesSpec
+import com.starsep.myepisodeskt.config.OutputSpec
+import com.starsep.myepisodeskt.config.TraktTVSpec
 import com.uchuhimo.konf.Config
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache

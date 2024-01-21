@@ -6,7 +6,7 @@ plugins {
     id("com.github.johnrengelman.shadow")
 }
 
-val mainPackage = "com.starsep.myepisodes_kt"
+val mainPackage = "com.starsep.myepisodeskt"
 val mainClassName = "$mainPackage.MainKt"
 group = mainPackage
 version = "0.0.1"
@@ -29,14 +29,8 @@ dependencies {
 }
 
 tasks {
-    /*compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
-    }
-    compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
-    }*/
     named<ShadowJar>("shadowJar") {
-        archiveBaseName.set("myepisodes_kt")
+        archiveBaseName.set("myepisodeskt")
         mergeServiceFiles()
         manifest {
             attributes(mapOf("Main-Class" to mainClassName))
