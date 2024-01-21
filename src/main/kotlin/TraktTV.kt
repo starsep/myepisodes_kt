@@ -2,6 +2,10 @@ package com.starsep.myepisodes_kt
 
 import CONFIG_FILENAME
 import com.starsep.myepisodes_kt.config.TraktTVSpec
+import com.starsep.myepisodes_kt.model.Episode
+import com.starsep.myepisodes_kt.model.MyEpisodesTraktMatching
+import com.starsep.myepisodes_kt.model.Show
+import com.starsep.myepisodes_kt.model.TraktTVShowSearchResult
 import com.starsep.myepisodes_kt.network.TokenRequest
 import com.starsep.myepisodes_kt.network.TokenResponse
 import com.uchuhimo.konf.Config
@@ -45,7 +49,7 @@ class TraktTV : KoinComponent {
         exitProcess(0)
     }
 
-    suspend fun run() {
+    suspend fun run(shows: List<Show>, showsData: Map<String, List<Episode>>, existingMatching: MyEpisodesTraktMatching): MyEpisodesTraktMatching {
         val accessToken = config[TraktTVSpec.accessToken] ?: requestToken()
         val authorizedHttpClient = httpClient.config {
             defaultRequest {
@@ -55,6 +59,31 @@ class TraktTV : KoinComponent {
                 header("trakt-api-key", config[TraktTVSpec.clientID])
             }
         }
+        val results = existingMatching.toMutableMap()
+        for (show in shows) {
+            if (show.url in results) continue
+            val nameWithoutParentheses = show.name.replace(Regex("\\(.*\\)"), "").trim()
+            val response = authorizedHttpClient.get("/search/show") {
+                parameter("query", nameWithoutParentheses)
+                parameter("fields", "title")
+            }.body<List<TraktTVShowSearchResult>>()
+            when (response.size) {
+                0 -> println("No results for $nameWithoutParentheses: ${show.url}")
+                1 -> {
+                    results[show.url] = response[0].show.ids.trakt
+                }
+                else -> {
+                    val myEpisodesFirstEpisodeYear = showsData[show.id]!![0].date.takeLast(4)
+                    val bestMatch = response[0]
+                    if (bestMatch.show.year?.toString() == myEpisodesFirstEpisodeYear && bestMatch.show.title == nameWithoutParentheses) {
+                        results[show.url] = bestMatch.show.ids.trakt
+                    } else {
+                        println("No good match for $nameWithoutParentheses: ${show.url} $myEpisodesFirstEpisodeYear")
+                    }
+                }
+            }
+        }
+        return results
     }
 
     private suspend fun requestToken(): String {
